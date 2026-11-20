@@ -1,6 +1,6 @@
 // Guarda la app en el dispositivo para usarla sin conexión y gestiona las actualizaciones.
 // Al publicar una versión nueva, cambia el número de VERSION.
-const VERSION = '7.6';
+const VERSION = '7.8';
 const CACHE = 'recetario-' + VERSION;
 const ARCHIVOS = ['./', 'index.html', 'manifest.webmanifest', 'icono-192.png', 'icono-512.png'];
 

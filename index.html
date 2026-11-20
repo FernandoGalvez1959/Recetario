@@ -459,7 +459,7 @@ textarea{min-height:104px;resize:vertical;line-height:1.45}
    1. Catálogo
    Formato: momento|nombre|tipos|raciones|°C|min|ingredientes|pasos|consejo
    ============================================================ */
-const VERSION = '7.6 · 20-11-2026';
+const VERSION = '7.8 · 20-11-2026';
 
 const CRUDO = `
 desayuno|Tostada de tomate y aceite|cereales,verduras|1|180|5|2 rebanadas de pan de hogaza;1 tomate maduro rallado;1 cucharada de aceite de oliva virgen extra;Sal|Tuesta el pan 5 minutos a 180°C dándole la vuelta a mitad;Escurre el tomate rallado y extiéndelo sobre el pan;Riega con el aceite y sala al gusto|Escurre bien el tomate o el pan se reblandece en dos minutos.
@@ -916,6 +916,26 @@ merienda|Naranja y jengibre con soda|fruta|2|JARRA||300 ml de zumo de naranja;1 
 merienda|Clara 0,0 con limón|cereales,fruta|2|JARRA||400 ml de cerveza sin alcohol;400 ml de gaseosa de limón;Hielo;1 rodaja de limón|Mezcla la cerveza 0,0 con la gaseosa, las dos muy frías;Sirve sin apurar para no perder la espuma;Añade el limón||combinados
 merienda|Sandía y menta|fruta|2|BATIDORA||500 g de sandía sin pepitas;Zumo de 1 lima;10 hojas de menta;Hielo;Un chorro de soda|Tritura la sandía con la lima y la menta;Cuela si quieres y añade el hielo;Completa con un golpe de soda al servir||combinados
 merienda|Sidra 0,0 con manzana y canela|fruta|4|JARRA||700 ml de sidra sin alcohol;1 manzana en rodajas finas;1 rama de canela;1 cucharada de miel;Hielo|Calienta un poco de sidra con la canela y la miel y deja enfriar;Mezcla con el resto de la sidra y la manzana;Deja una hora en la nevera y sirve con hielo||combinados
+merienda|Limoncello|fruta|20|MACERAR|28800|8 limones de piel gruesa sin tratar;1 l de alcohol de 96 grados;800 g de azúcar;1 l de agua|Pela los limones con un pelador cogiendo solo la parte amarilla, que lo blanco amarga;Mete las pieles en un tarro con el alcohol y déjalo 20 días en un sitio oscuro, agitando cada dos o tres días;Haz un almíbar con el agua y el azúcar, déjalo enfriar del todo y mézclalo con el alcohol colado;Embotella y deja reposar otros 20 días antes de probarlo. Se sirve del congelador|Ni un milímetro de piel blanca. Es lo único que distingue un limoncello fino de uno áspero. Salen unos 2 litros.|licores
+merienda|Pacharán|fruta|20|MACERAR|129600|1 kg de endrinas;2 l de anís seco o dulce;2 ramas de canela;Unos granos de café;1 vaina de vainilla|Lava las endrinas, sécalas y congélalas una noche para que se abran mejor;Ponlas en una garrafa con el anís, la canela, el café y la vainilla;Macera 3 meses en un sitio oscuro y fresco, moviendo la garrafa una vez por semana;Cuela, embotella y bébelo antes de un año: pasado ese tiempo pierde color y aroma|Más de tres meses no mejora nada, y más de un año lo empeora. Salen 2 litros.|licores
+merienda|Licor de hierbas|fruta|20|MACERAR|57600|1 l de orujo blanco;1 rama de romero;1 rama de tomillo;10 hojas de menta;La piel de 1 limón;5 granos de anís verde;300 g de azúcar;300 ml de agua|Mete las hierbas con la piel de limón y el anís en el orujo;Macera 40 días en oscuridad, agitando una vez por semana;Cuela con un paño fino, añade el almíbar de agua y azúcar ya frío;Embotella y deja reposar un mes más|Las hierbas frescas hay que secarlas al aire un par de días antes, o enturbian el licor.|licores
+merienda|Orujo de hierbas|fruta|20|MACERAR|86400|1 l de orujo gallego;1 puñado de hierbaluisa;1 rama de menta poleo;1 rama de romero;La piel de 1 naranja;200 g de azúcar|Introduce las hierbas y la piel de naranja en la botella de orujo;Macera 60 días en un sitio fresco y oscuro;Cuela, endulza con el azúcar disuelto en un poco de agua templada y vuelve a embotellar||licores
+merienda|Crema de orujo|lacteos|20|MACERAR|2880|500 ml de orujo blanco;400 ml de leche condensada;400 ml de nata para montar;1 cucharadita de canela;1 vaina de vainilla abierta|Mezcla la nata con la leche condensada sin montar, solo removiendo;Añade el orujo poco a poco sin dejar de remover;Agrega la canela y la vainilla, embotella y deja 2 días en la nevera antes de servir|Se conserva tres semanas en la nevera y hay que agitarla antes de cada copa.|licores
+merienda|Licor de café|fruta|20|MACERAR|43200|1 l de orujo o aguardiente;200 g de café en grano recién tostado;500 g de azúcar;500 ml de agua;1 rama de canela|Mete los granos de café enteros en el aguardiente con la canela;Macera 30 días en oscuridad, agitando cada semana;Cuela, añade el almíbar frío de agua y azúcar;Embotella y espera otro mes: el café necesita asentarse|Granos enteros, nunca molido: molido enturbia el licor y lo deja amargo.|licores
+merienda|Amaretto casero|fruta|20|MACERAR|28800|700 ml de vodka o aguardiente neutro;200 g de almendras crudas peladas;20 huesos de albaricoque (opcional);400 g de azúcar moreno;300 ml de agua;1 cucharadita de extracto de vainilla|Tuesta ligeramente las almendras y májalas en grueso;Ponlas en el alcohol con la vainilla y macera 20 días agitando a menudo;Haz un almíbar con el azúcar moreno y el agua, déjalo enfriar y mézclalo colando las almendras;Embotella y deja reposar un mes|El azúcar moreno es lo que le da ese color ambarino y el fondo a tostado.|licores
+merienda|Licor de guindas|fruta|20|MACERAR|86400|1 kg de guindas;1 l de aguardiente;400 g de azúcar;1 rama de canela;La piel de 1 limón|Lava las guindas y pínchalas una a una con un palillo sin quitarles el hueso;Ponlas en un tarro con el azúcar, la canela, el limón y el aguardiente;Macera 2 meses al sol o en sitio templado, moviendo el tarro cada pocos días;Cuela y embotella. Las guindas se comen aparte, que están mejor que el licor||licores
+merienda|Ratafía|fruta|20|MACERAR|57600|1 l de aguardiente;30 nueces verdes partidas en cuartos;La piel de 1 limón y 1 naranja;1 rama de canela;4 clavos;1 puñado de hierbas aromáticas;400 g de azúcar|Parte las nueces verdes con guantes, que tiñen las manos de negro;Mételas con todo lo demás menos el azúcar y macera 40 días al sol;Cuela, endulza con el azúcar y embotella;Deja reposar hasta Navidad: cuanto más espera, más redonda queda|Las nueces hay que cogerlas verdes, por San Juan, cuando aún se parten con el cuchillo.|licores
+merienda|Licor de naranja|fruta|20|MACERAR|28800|La piel de 6 naranjas sin tratar;750 ml de aguardiente;400 g de azúcar;400 ml de agua;1 rama de canela|Pela las naranjas sin la parte blanca;Macera las pieles en el aguardiente con la canela 20 días en oscuridad;Cuela, añade el almíbar frío y embotella;Espera 15 días antes de servir||licores
+merienda|Crema de whisky|lacteos|20|MACERAR|1440|300 ml de whisky;400 ml de leche condensada;300 ml de nata;2 cucharadas de café soluble;1 cucharada de cacao puro;1 cucharadita de vainilla|Disuelve el café y el cacao en un par de cucharadas de agua caliente y deja enfriar;Mezcla la nata con la leche condensada y añade el whisky poco a poco;Incorpora el café, el cacao y la vainilla, embotella y deja un día en la nevera|Dura tres semanas en la nevera. Agítala antes de servir.|licores
+merienda|Nocino, licor de nueces|fruta|20|MACERAR|57600|24 nueces verdes;1 l de alcohol de 96 grados;500 g de azúcar;500 ml de agua;1 rama de canela;4 clavos;La piel de 1 limón|Parte las nueces verdes en cuatro con guantes;Macéralas con el alcohol, la canela, los clavos y el limón 40 días al sol, agitando a diario;Cuela por un paño, añade el almíbar frío y embotella;Guárdalo al menos tres meses: recién hecho es áspero|El tiempo de reposo no es opcional en este: de joven no hay quien se lo beba.|licores
+merienda|Licor de melocotón|fruta|20|MACERAR|43200|1 kg de melocotones maduros;1 l de aguardiente;500 g de azúcar;1 rama de canela;1 vaina de vainilla|Pela y trocea los melocotones y ponlos con el azúcar en un tarro;Añade el aguardiente, la canela y la vainilla;Macera 30 días removiendo cada semana;Cuela apretando bien la fruta y embotella||licores
+merienda|Licor de manzana|fruta|20|MACERAR|43200|6 manzanas reineta;1 l de orujo blanco;400 g de azúcar;1 rama de canela;La piel de 1 limón|Corta las manzanas en gajos sin pelar y quítales el corazón;Ponlas con el orujo, la canela y el limón;Macera 30 días en oscuridad;Cuela, endulza con el azúcar disuelto en poca agua y deja reposar 15 días||licores
+merienda|Licor de canela|fruta|20|MACERAR|28800|1 l de aguardiente;6 ramas de canela;La piel de 1 limón;400 g de azúcar;400 ml de agua|Macera la canela y la piel de limón en el aguardiente 20 días;Cuela y añade el almíbar ya frío;Embotella y deja reposar un mes||licores
+merienda|Licor de moras|fruta|20|MACERAR|43200|1 kg de moras;1 l de aguardiente;500 g de azúcar;1 rama de canela|Lava las moras con cuidado y escúrrelas bien;Ponlas en un tarro con el azúcar y el aguardiente;Macera 30 días moviendo el tarro cada pocos días;Cuela por un colador fino sin aplastar demasiado y embotella|Sin aplastar la fruta al colar: si no, el licor queda turbio y con poso.|licores
+merienda|Licor de miel|fruta|20|MACERAR|21600|750 ml de orujo blanco;400 g de miel;1 rama de canela;La piel de 1 naranja;1 clavo|Templa la miel al baño María sin que hierva para que se mezcle bien;Mézclala con el orujo, la canela, la naranja y el clavo;Macera 15 días en un tarro, agitando a diario;Cuela y embotella||licores
+merienda|Licor de chocolate|lacteos|20|MACERAR|2880|500 ml de leche;200 g de chocolate negro;300 ml de aguardiente;250 g de azúcar;1 vaina de vainilla|Calienta la leche con la vainilla y funde dentro el chocolate y el azúcar;Deja enfriar por completo;Añade el aguardiente removiendo bien y embotella;Deja 2 días en la nevera antes de servir||licores
+merienda|Licor de membrillo|fruta|20|MACERAR|57600|3 membrillos maduros;1 l de aguardiente;500 g de azúcar;1 rama de canela;4 clavos|Lava bien los membrillos, quítales la pelusa y córtalos en gajos sin pelar;Ponlos con el aguardiente, la canela y los clavos;Macera 40 días en oscuridad;Cuela, endulza y deja reposar un mes antes de abrirlo|El membrillo perfuma como ninguna otra fruta, pero necesita sus cuarenta días.|licores
+merienda|Licor de arándanos|fruta|20|MACERAR|43200|700 g de arándanos;1 l de aguardiente;400 g de azúcar;La piel de 1 limón|Machaca ligeramente los arándanos para que suelten el jugo;Ponlos con el aguardiente, el azúcar y la piel de limón;Macera 30 días removiendo cada semana;Cuela y embotella||licores
 `.trim();
 
 /* Plan de 21 días y listas de la compra, traídos de la app del hígado. */
@@ -935,7 +955,8 @@ const SECCIONES_BASE = [
   {id:'postres',          nombre:'Postres',            icono:'🍰'},
   {id:'olla-rapida',      nombre:'Olla rápida',        icono:'⏲️'},
   {id:'olla-ferroviaria', nombre:'Olla ferroviaria',   icono:'🔥'},
-  {id:'combinados',       nombre:'Combinados y 0,0',    icono:'🍹'}
+  {id:'combinados',       nombre:'Combinados y 0,0',    icono:'🍹'},
+  {id:'licores',          nombre:'Licores caseros',    icono:'🍶'}
 ];
 
 /* Las recetas que ya había van a Air Fryer, y además a Ensaladas o Tapas si lo son. */
@@ -1222,7 +1243,96 @@ function pieza(tipo, color, x, y, rot, esc){
   }
   return `<g transform="translate(${x.toFixed(1)},${y.toFixed(1)}) rotate(${rot.toFixed(1)}) scale(${esc.toFixed(2)})">${d}</g>`;
 }
+/* Para las bebidas no se dibuja un plato, sino el vaso o la botella. */
+const COLORES_BEBIDA = [
+  ['nata','#F2EADA'],['leche condensada','#F2EADA'],['crema de coco','#F2EADA'],
+  ['café','#5A3A24'],['chocolate','#4E2E1E'],['cacao','#4E2E1E'],['cola','#4A2A1C'],
+  ['tomate','#B8392A'],['vino tinto','#7A2232'],['tinto','#7A2232'],['mora','#5C3A66'],
+  ['arándano','#4A4478'],['endrina','#5C2A42'],['pacharán','#9C2F3A'],['fresa','#C4302F'],
+  ['guinda','#A82030'],['sandía','#D84C5A'],['melocotón','#E08A3C'],['naranja','#E08A2B'],
+  ['piña','#E3C05A'],['limón','#E5C64C'],['lima','#C8D44C'],['manzana','#C9D46A'],
+  ['hierba','#6E9450'],['menta','#6E9450'],['hierbabuena','#6E9450'],['pepino','#8CBF6A'],
+  ['anís','#D8DCC0'],['miel','#D9A227'],['canela','#9C6A32'],['nuez','#8A6A3A'],
+  ['almendra','#D8C49A'],['coco','#F0E8D4'],['nata','#F2EADA'],['leche','#F2EADA'],
+  ['membrillo','#D88A3C'],['té','#B07A3C'],['jengibre','#E0B050'],['whisky','#C98A3A'],
+  ['ron','#D8A657'],['ginebra','#DCE4EC'],['tónica','#DCE4EC'],['vodka','#E4EAF0'],
+  ['sidra','#E0C070'],['cerveza','#E0A83C'],['orujo','#E8EEE4'],['vermut','#A8402A'],
+  ['tónica','#E2E8EE'],['ginebra','#E2E8EE'],['vodka','#E4EAF0']
+];
+function colorBebida(r){
+  const t = (r.nombre + ' ' + r.ing.join(' ')).toLowerCase();
+  for(const [clave, color] of COLORES_BEBIDA) if(t.includes(clave)) return color;
+  return '#D8A657';
+}
+function dibujarBebida(r, clase, licor){
+  const rnd = azar(semilla(r.id + r.nombre));
+  const liq = colorBebida(r);
+  const fondo = licor ? '#E9E5D6' : '#E7E8DC';
+  const cristal = 'rgba(255,255,255,.72)';
+  const brillo = 'rgba(255,255,255,.55)';
+  let d = '';
+
+  if(licor){
+    // botella de maceración y copita
+    d += `<path d="M150 96 L250 96 L258 214 Q258 232 240 232 L160 232 Q142 232 142 214 Z" fill="${cristal}"/>`;
+    d += `<path d="M152 128 L248 128 L256 212 Q256 228 240 228 L160 228 Q144 228 144 212 Z" fill="${liq}"/>`;
+    d += `<rect x="182" y="46" width="36" height="54" fill="${cristal}"/>`;
+    d += `<rect x="182" y="52" width="36" height="48" fill="${liq}" opacity=".9"/>`;
+    d += `<rect x="176" y="28" width="48" height="26" rx="7" fill="#B98A4E"/>`;
+    d += `<rect x="162" y="150" width="76" height="46" rx="6" fill="#FBF7EC"/>`;
+    for(let i = 0; i < 3; i++)
+      d += `<rect x="172" y="${160 + i * 12}" width="${56 - i * 12}" height="5" rx="2" fill="#D8CDB4"/>`;
+    // fruta flotando
+    for(let i = 0; i < 4; i++)
+      d += `<circle cx="${166 + rnd() * 68}" cy="${140 + rnd() * 70}" r="${6 + rnd() * 5}" fill="rgba(0,0,0,.18)"/>`;
+    // copita al lado
+    d += `<path d="M284 128 Q284 182 312 186 Q340 182 340 128 Z" fill="${cristal}"/>`;
+    d += `<path d="M288 144 Q290 178 312 182 Q334 178 336 144 Z" fill="${liq}"/>`;
+    d += `<rect x="308" y="184" width="8" height="34" fill="${cristal}"/>`;
+    d += `<ellipse cx="312" cy="220" rx="26" ry="7" fill="${cristal}"/>`;
+    d += `<rect x="180" y="110" width="7" height="90" rx="3" fill="${brillo}"/>`;
+  }else{
+    const alto = rnd() > .45;            // vaso alto o vaso bajo
+    const x0 = alto ? 162 : 148, x1 = alto ? 238 : 252;
+    const yTop = alto ? 44 : 92;
+    d += `<path d="M${x0} ${yTop} L${x1} ${yTop} L${x1 - 8} 216 Q${x1 - 10} 228 ${x1 - 24} 228 L${x0 + 24} 228 Q${x0 + 10} 228 ${x0 + 8} 216 Z" fill="${cristal}"/>`;
+    const yLiq = yTop + (alto ? 34 : 22);
+    d += `<path d="M${x0 + 2} ${yLiq} L${x1 - 2} ${yLiq} L${x1 - 9} 214 Q${x1 - 11} 225 ${x1 - 24} 225 L${x0 + 24} 225 Q${x0 + 11} 225 ${x0 + 9} 214 Z" fill="${liq}"/>`;
+    // hielo
+    for(let i = 0; i < 3; i++){
+      const hx = x0 + 14 + rnd() * (x1 - x0 - 46), hy = yLiq + 14 + rnd() * 90;
+      d += `<g transform="translate(${hx.toFixed(0)},${hy.toFixed(0)}) rotate(${(-25 + rnd() * 50).toFixed(0)})">
+             <rect x="-15" y="-15" width="30" height="30" rx="7" fill="rgba(255,255,255,.55)"/></g>`;
+    }
+    // burbujas
+    for(let i = 0; i < 6; i++)
+      d += `<circle cx="${(x0 + 12 + rnd() * (x1 - x0 - 24)).toFixed(0)}" cy="${(yLiq + 20 + rnd() * 100).toFixed(0)}" r="${(2 + rnd() * 3).toFixed(1)}" fill="rgba(255,255,255,.6)"/>`;
+    // pajita
+    const col = ['#A83B22','#D9A227','#4E7A3A','#C4402F'][Math.floor(rnd() * 4)];
+    d += `<g transform="translate(${(x1 - 26).toFixed(0)},${(yTop + 10).toFixed(0)}) rotate(14)">
+           <rect x="-6" y="-46" width="12" height="190" rx="6" fill="${col}"/>
+           <rect x="-6" y="-46" width="12" height="26" rx="6" fill="rgba(255,255,255,.55)"/>
+           <rect x="-6" y="6" width="12" height="26" rx="6" fill="rgba(255,255,255,.55)"/></g>`;
+    // rodaja en el borde
+    d += `<g transform="translate(${(x0 - 4).toFixed(0)},${(yTop + 6).toFixed(0)})">
+           <circle r="26" fill="#E5C64C"/><circle r="19" fill="#F2DE96"/>
+           <path d="M-19 0 L19 0 M0 -19 L0 19" stroke="#E5C64C" stroke-width="3"/></g>`;
+    // hojita
+    d += `<path d="M${x1 - 46} ${yTop - 4} C${x1 - 22} ${yTop - 26} ${x1 - 4} ${yTop - 14} ${x1 - 14} ${yTop + 8} C${x1 - 30} ${yTop + 16} ${x1 - 42} ${yTop + 8} ${x1 - 46} ${yTop - 4} Z" fill="#4E7A3A"/>`;
+    d += `<rect x="${x0 + 10}" y="${yLiq + 16}" width="7" height="${alto ? 120 : 90}" rx="3" fill="${brillo}"/>`;
+  }
+
+  return `<svg class="${clase}" viewBox="0 0 400 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ilustración de ${escapar(r.nombre)}">
+    <rect width="400" height="260" fill="${fondo}"/>
+    <ellipse cx="200" cy="236" rx="118" ry="14" fill="rgba(0,0,0,.08)"/>
+    ${d}</svg>`;
+}
+
 function dibujarPlato(r, clase){
+  const sec = r.secs || [];
+  if(sec.includes('licores')) return dibujarBebida(r, clase, true);
+  if(sec.includes('combinados')) return dibujarBebida(r, clase, false);
+
   const piezas = piezasDe(r);
   const rnd = azar(semilla(r.id + r.nombre));
   const n = piezas.length;
@@ -1259,8 +1369,12 @@ const gradosNum = r => typeof r.temp === 'number' && !isNaN(r.temp);
 function textoTiempo(min){
   if(!min) return '';
   if(min < 90) return min + ' min';
-  const h = Math.floor(min / 60), m = min % 60;
-  return m ? h + ' h ' + m : h + ' h';
+  if(min < 2880){
+    const h = Math.floor(min / 60), m = min % 60;
+    return m ? h + ' h ' + m : h + ' h';
+  }
+  const d = Math.round(min / 1440);
+  return d < 60 ? d + ' días' : Math.round(d / 30) + ' meses';
 }
 function lecturaDe(r){
   if(enFrio(r)) return '<span class="lectura"><span><b>En frío</b><span>sin cocinar</span></span></span>';
@@ -1276,7 +1390,7 @@ function medidasDe(r){
   else if(r.temp) c.push(`<div><b style="font-size:17px">${escapar(r.temp)}</b><small>modo</small></div>`);
   if(r.min) c.push(`<div><b>${textoTiempo(r.min)}</b><small>tiempo</small></div>`);
   if(enFrio(r)) c.push('<div><b>En frío</b><small>no se cocina</small></div>');
-  c.push(`<div><b>${r.raciones || 2}</b><small>raciones</small></div>`);
+  c.push(`<div><b>${r.raciones || 2}</b><small>${r.temp === 'MACERAR' ? 'copas' : 'raciones'}</small></div>`);
   return '<div class="medidas">' + c.join('') + '</div>';
 }
 const fotoDe = r => fotos[r.id] || null;
@@ -1527,7 +1641,7 @@ function abrirFicha(id){
     <h3>${escapar(r.nombre)}</h3>
     <div class="etiquetas">${r.tipos.map(t => `<span class="etq">${nombreTipo(t)}</span>`).join('')}</div>
     ${medidasDe(r)}
-    ${r.min ? `<button class="btnCrono" data-crono="1">⏱ Poner el temporizador · ${etapasDe(r).map(e => e.min).join(' + ')} min</button>` : ''}
+    ${r.min && r.min < 1440 ? `<button class="btnCrono" data-crono="1">⏱ Poner el temporizador · ${etapasDe(r).map(e => e.min).join(' + ')} min</button>` : ''}
     <button class="btnCrono" data-ajustar="1">✎ Ajustar a mi freidora${r.ajustada ? ' (ajustada)' : ''}</button>
     <h4>Ingredientes</h4>
     <ul>${r.ing.map(i => `<li>${escapar(i)}</li>`).join('')}</ul>
@@ -1642,6 +1756,8 @@ function pintarExtras(){
   }else if(seccionActual === 'olla-ferroviaria'){
     e.innerHTML = '<button class="btn" id="verFerro">🛒 Lista de la compra</button>';
     $('verFerro').addEventListener('click', abrirFerro);
+  }else if(seccionActual === 'licores'){
+    e.innerHTML = '<p class="pista" style="width:100%;margin:0">Los tiempos son de maceración, no de cocina. Tarro de cristal bien cerrado, sitio oscuro y paciencia. Solo para mayores de edad.</p>';
   }else if(seccionActual === 'combinados'){
     e.innerHTML = '<p class="pista" style="width:100%;margin:0">Los combinados con alcohol son solo para mayores de edad. Con moderación.</p>';
   }else if(seccionActual === 'helados'){
