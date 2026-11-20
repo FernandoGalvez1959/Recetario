@@ -315,7 +315,7 @@ textarea{min-height:104px;resize:vertical;line-height:1.45}
         <div><label for="fTemp">Temperatura (°C)</label><input id="fTemp" type="number" min="60" max="240" step="5" placeholder="180"></div>
         <div><label for="fMin">Tiempo (min)</label><input id="fMin" type="number" min="1" max="180" placeholder="15"></div>
       </div>
-      <p class="pista">Si la receta no pasa por la freidora, una ensalada fría por ejemplo, deja estas dos casillas vacías.</p>
+      <p class="pista">Si la receta no se cocina, una ensalada fría o un combinado por ejemplo, deja estas dos casillas vacías. En la temperatura también puedes escribir una palabra: BAJA, PRESIÓN, MACERAR…</p>
       <label for="fRaciones">Raciones</label>
       <input id="fRaciones" type="number" min="1" max="12" placeholder="2">
       <label for="fIng">Ingredientes</label>
@@ -325,7 +325,7 @@ textarea{min-height:104px;resize:vertical;line-height:1.45}
       <textarea id="fPasos" placeholder="Salpimentar el pescado.&#10;Precalentar 3 minutos.&#10;Cocinar y dar la vuelta a mitad."></textarea>
       <p class="pista">Un paso por línea.</p>
       <label for="fConsejo">Consejo (opcional)</label>
-      <input id="fConsejo" type="text" placeholder="Queda mejor si no amontonas el cesto">
+      <input id="fConsejo" type="text" placeholder="El truco que no quieres olvidar">
       <label>Fotografía (opcional)</label>
       <div class="acciones" style="margin-top:0">
         <button class="btn" id="fFotoCam">📷 Hacer una foto</button>
@@ -398,11 +398,11 @@ textarea{min-height:104px;resize:vertical;line-height:1.45}
 <div class="capa" id="capaAjuste" hidden>
   <div class="hoja" role="dialog" aria-modal="true" aria-labelledby="tituloAjuste">
     <header>
-      <h2 id="tituloAjuste">Ajustar a mi freidora</h2>
+      <h2 id="tituloAjuste">Ajustar tiempos y grados</h2>
       <button class="cerrar" data-cerrar="capaAjuste" aria-label="Cerrar">&times;</button>
     </header>
     <div class="contenido">
-      <p class="pista" style="margin-top:0">Cada freidora es de su padre y de su madre. Pon aquí los grados y los minutos que a ti te funcionan y la receta se queda así para siempre.</p>
+      <p class="pista" style="margin-top:0">Cada aparato y cada cocina son distintos. Pon aquí los grados y los tiempos que a ti te funcionan y la receta se queda así para siempre.</p>
       <p class="pista" id="ajQue" style="color:var(--tinta);font-weight:600"></p>
       <label for="ajTemp">Temperatura (°C)</label>
       <input id="ajTemp" type="number" min="60" max="240" step="5">
@@ -459,7 +459,7 @@ textarea{min-height:104px;resize:vertical;line-height:1.45}
    1. Catálogo
    Formato: momento|nombre|tipos|raciones|°C|min|ingredientes|pasos|consejo
    ============================================================ */
-const VERSION = '7.8 · 20-11-2026';
+const VERSION = '7.9 · 20-11-2026';
 
 const CRUDO = `
 desayuno|Tostada de tomate y aceite|cereales,verduras|1|180|5|2 rebanadas de pan de hogaza;1 tomate maduro rallado;1 cucharada de aceite de oliva virgen extra;Sal|Tuesta el pan 5 minutos a 180°C dándole la vuelta a mitad;Escurre el tomate rallado y extiéndelo sobre el pan;Riega con el aceite y sala al gusto|Escurre bien el tomate o el pan se reblandece en dos minutos.
@@ -1631,7 +1631,7 @@ function abrirFicha(id){
   const fav = datos.favoritos.includes(r.id);
   const f = fotoDe(r);
   const img = f ? `<img src="${f}" alt="${escapar(r.nombre)}">` : dibujarPlato(r, '');
-  $('tituloFicha').textContent = (r.momentos || []).map(nombreMomento).join(' · ');
+  $('tituloFicha').textContent = (r.secs || []).map(nombreSeccion).join(' · ') || 'Receta';
   $('ficha').innerHTML = `
     ${img}
     <div class="fotobar">
@@ -1641,8 +1641,8 @@ function abrirFicha(id){
     <h3>${escapar(r.nombre)}</h3>
     <div class="etiquetas">${r.tipos.map(t => `<span class="etq">${nombreTipo(t)}</span>`).join('')}</div>
     ${medidasDe(r)}
-    ${r.min && r.min < 1440 ? `<button class="btnCrono" data-crono="1">⏱ Poner el temporizador · ${etapasDe(r).map(e => e.min).join(' + ')} min</button>` : ''}
-    <button class="btnCrono" data-ajustar="1">✎ Ajustar a mi freidora${r.ajustada ? ' (ajustada)' : ''}</button>
+    ${r.min && r.min < 1440 ? `<button class="btnCrono" data-crono="1">⏱ Poner el temporizador · ${etapasDe(r).map(e => textoTiempo(e.min)).join(' + ')}</button>` : ''}
+    ${(gradosNum(r) || r.min) ? `<button class="btnCrono" data-ajustar="1">✎ Ajustar tiempos y grados${r.ajustada ? ' (ajustado)' : ''}</button>` : ''}
     <h4>Ingredientes</h4>
     <ul>${r.ing.map(i => `<li>${escapar(i)}</li>`).join('')}</ul>
     <h4>Preparación</h4>
@@ -2046,7 +2046,7 @@ $('ajGuardar').addEventListener('click', async () => {
     return;
   }
   const tandas = leerTiempos(false);
-  if(!tandas.length && !confirm('No has puesto ningún tiempo. ¿Es una receta fría, sin freidora?')) return;
+  if(!tandas.length && !confirm('No has puesto ningún tiempo. ¿Es una receta que no se cocina?')) return;
 
   tandas.forEach(t => { if(!t.temp) t.temp = temp; });
   const suma = tandas.reduce((a, e) => a + e.min, 0);
