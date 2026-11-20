@@ -343,6 +343,16 @@ textarea{min-height:104px;resize:vertical;line-height:1.45}
   </div>
 </div>
 
+<div class="capa" id="capaFerro" hidden>
+  <div class="hoja" role="dialog" aria-modal="true" aria-labelledby="tituloFerro">
+    <header>
+      <h2 id="tituloFerro">Compra para la olla ferroviaria</h2>
+      <button class="cerrar" data-cerrar="capaFerro" aria-label="Cerrar">&times;</button>
+    </header>
+    <div class="contenido" id="cuerpoFerro"></div>
+  </div>
+</div>
+
 <div class="capa" id="capaCompra" hidden>
   <div class="hoja" role="dialog" aria-modal="true" aria-labelledby="tituloCompra">
     <header>
@@ -437,7 +447,7 @@ textarea{min-height:104px;resize:vertical;line-height:1.45}
    1. Catálogo
    Formato: momento|nombre|tipos|raciones|°C|min|ingredientes|pasos|consejo
    ============================================================ */
-const VERSION = '7.3 · 20-11-2026';
+const VERSION = '7.4 · 20-11-2026';
 
 const CRUDO = `
 desayuno|Tostada de tomate y aceite|cereales,verduras|1|180|5|2 rebanadas de pan de hogaza;1 tomate maduro rallado;1 cucharada de aceite de oliva virgen extra;Sal|Tuesta el pan 5 minutos a 180°C dándole la vuelta a mitad;Escurre el tomate rallado y extiéndelo sobre el pan;Riega con el aceite y sala al gusto|Escurre bien el tomate o el pan se reblandece en dos minutos.
@@ -1554,6 +1564,9 @@ function pintarExtras(){
       + '<button class="btn" id="verCompra">🛒 Lista de la compra</button>';
     $('verPlan').addEventListener('click', abrirPlan);
     $('verCompra').addEventListener('click', abrirCompra);
+  }else if(seccionActual === 'olla-ferroviaria'){
+    e.innerHTML = '<button class="btn" id="verFerro">🛒 Lista de la compra</button>';
+    $('verFerro').addEventListener('click', abrirFerro);
   }else if(seccionActual === 'helados'){
     e.innerHTML = '<a class="cecotec" href="https://cecotec.es/recetas/buscar?q=gelatec%201800"'
       + ' target="_blank" rel="noopener"><b>Más recetas en la web de Cecotec</b>'
@@ -1623,6 +1636,78 @@ $('cuerpoCompra').addEventListener('click', async e => {
   }
 });
 function abrirCompra(){ pintarCompra(); abrir('capaCompra'); }
+
+/* ---------- compra para la olla ferroviaria ---------- */
+const CLAVE_FERRO = 'recetario:ferro';
+let ferro = {recetas: [], marcas: {}};
+const FERRO_FIJOS = [
+  'Carbón vegetal: 2 sacos para una jornada entera',
+  'Pastillas de encendido',
+  'Leña fina o astillas para prender',
+  'Papel de periódico',
+  'Cerillas largas o mechero de cocina',
+  'Guantes de horno',
+  'Mallas o redecillas para los garbanzos y las verduras',
+  'Sal gorda',
+  'Aceite de oliva virgen extra',
+  'Pan de hogaza',
+  'Vino tinto'
+];
+const recetasFerro = () => todas().filter(r => (r.secs || []).includes('olla-ferroviaria'));
+
+function filaCompra(texto, clave){
+  const on = !!ferro.marcas[clave];
+  return `<button class="item" data-ferro="${escapar(clave)}" aria-pressed="${on}">
+    <span class="tick">${on ? '✓' : ''}</span><span class="lbl">${escapar(texto)}</span></button>`;
+}
+function pintarFerro(){
+  const rs = recetasFerro();
+  let h = '<p class="pista" style="margin-top:0">Marca las recetas que vas a hacer y abajo se junta la compra. El carbón y lo de encender la olla va siempre.</p>'
+    + '<div class="opciones" id="ferroRecetas">'
+    + rs.map(r => `<label><input type="checkbox" value="${r.id}"${ferro.recetas.includes(r.id) ? ' checked' : ''}>${escapar(r.nombre)}</label>`).join('')
+    + '</div>';
+
+  h += '<p class="grupoCompra">Para la olla</p>'
+    + FERRO_FIJOS.map((t, i) => filaCompra(t, 'fijo' + i)).join('');
+
+  const ing = [];
+  rs.filter(r => ferro.recetas.includes(r.id)).forEach(r => {
+    r.ing.forEach(x => {
+      const limpio = x.replace(/^(PARA EL PRECALDO|PARA EL CONDUMIO):\s*/i, '').trim();
+      if(limpio && !ing.some(y => y.toLowerCase() === limpio.toLowerCase())) ing.push(limpio);
+    });
+  });
+  if(ing.length){
+    h += `<p class="grupoCompra">Ingredientes (${ing.length})</p>`
+      + ing.map(t => filaCompra(t, 'i:' + t.toLowerCase())).join('');
+  }else{
+    h += '<p class="pista">Marca arriba las recetas que vayas a cocinar y aquí aparecerán sus ingredientes, sin repetir.</p>';
+  }
+  h += '<div class="acciones"><button class="btn" id="limpiaFerro">Desmarcar todo</button></div>';
+  $('cuerpoFerro').innerHTML = h;
+  $('limpiaFerro').addEventListener('click', async () => {
+    ferro.marcas = {};
+    await escribirClave(CLAVE_FERRO, ferro);
+    pintarFerro();
+  });
+}
+$('cuerpoFerro').addEventListener('click', async e => {
+  const b = e.target.closest('[data-ferro]');
+  if(!b) return;
+  const k = b.dataset.ferro;
+  if(ferro.marcas[k]) delete ferro.marcas[k]; else ferro.marcas[k] = true;
+  await escribirClave(CLAVE_FERRO, ferro);
+  pintarFerro();
+});
+$('cuerpoFerro').addEventListener('change', async e => {
+  if(e.target.tagName !== 'INPUT') return;
+  const id = e.target.value;
+  if(e.target.checked){ if(!ferro.recetas.includes(id)) ferro.recetas.push(id); }
+  else ferro.recetas = ferro.recetas.filter(x => x !== id);
+  await escribirClave(CLAVE_FERRO, ferro);
+  pintarFerro();
+});
+function abrirFerro(){ pintarFerro(); abrir('capaFerro'); }
 
 /* ---------- ajustar grados y tiempos ---------- */
 function filaTiempo(i, valor, texto, total){
@@ -2237,6 +2322,11 @@ $('btnActualizar').addEventListener('click', async () => {
   $('version').textContent = 'Versión ' + VERSION;
 
 
+  const fe = await leerClave(CLAVE_FERRO);
+  if(fe && typeof fe === 'object'){
+    ferro.recetas = Array.isArray(fe.recetas) ? fe.recetas : [];
+    ferro.marcas = (fe.marcas && typeof fe.marcas === 'object') ? fe.marcas : {};
+  }
   const cm = await leerClave(CLAVE_COMPRA);
   if(cm && typeof cm === 'object') compraMarcas = cm;
   const a = await leerClave(CLAVE_AJUSTES);
