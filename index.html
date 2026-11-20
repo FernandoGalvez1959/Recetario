@@ -404,9 +404,12 @@ textarea{min-height:104px;resize:vertical;line-height:1.45}
     <div class="contenido">
       <p class="pista" style="margin-top:0">Cada aparato y cada cocina son distintos. Pon aquí los grados y los tiempos que a ti te funcionan y la receta se queda así para siempre.</p>
       <p class="pista" id="ajQue" style="color:var(--tinta);font-weight:600"></p>
-      <label for="ajTemp">Temperatura (°C)</label>
-      <input id="ajTemp" type="number" min="60" max="240" step="5">
-      <p class="pista" style="margin-top:14px">Si la receta se hace en dos tandas, pon cada una por separado con <b>+ Añadir otra tanda</b>. También puedes escribir <b>12+10</b> en una sola casilla.</p>
+      <div id="ajZonaTemp">
+        <label for="ajTemp">Temperatura (°C)</label>
+        <input id="ajTemp" type="number" min="60" max="240" step="5">
+      </div>
+      <p class="pista" id="ajModo" hidden></p>
+      <p class="pista" id="ajPistaTandas" style="margin-top:14px">Si la receta se hace en dos tandas, pon cada una por separado con <b>+ Añadir otra tanda</b>. También puedes escribir <b>12+10</b> en una sola casilla.</p>
       <div id="ajTiempos"></div>
       <p class="error" id="ajError" role="alert"></p>
       <div class="acciones">
@@ -459,7 +462,7 @@ textarea{min-height:104px;resize:vertical;line-height:1.45}
    1. Catálogo
    Formato: momento|nombre|tipos|raciones|°C|min|ingredientes|pasos|consejo
    ============================================================ */
-const VERSION = '7.9 · 20-11-2026';
+const VERSION = '8.1 · 20-11-2026';
 
 const CRUDO = `
 desayuno|Tostada de tomate y aceite|cereales,verduras|1|180|5|2 rebanadas de pan de hogaza;1 tomate maduro rallado;1 cucharada de aceite de oliva virgen extra;Sal|Tuesta el pan 5 minutos a 180°C dándole la vuelta a mitad;Escurre el tomate rallado y extiéndelo sobre el pan;Riega con el aceite y sala al gusto|Escurre bien el tomate o el pan se reblandece en dos minutos.
@@ -1382,13 +1385,34 @@ function lecturaDe(r){
     ? `<span><b>${r.temp}°</b><span>C</span></span>`
     : (r.temp ? `<span><b style="font-size:15px">${escapar(r.temp)}</b></span>` : '');
   const m = r.min ? `<span><b>${textoTiempo(r.min).split(' ')[0]}</b><span>${textoTiempo(r.min).split(' ').slice(1).join(' ')}</span></span>` : '';
+  if(!r.min && r.temp && !gradosNum(r)) return `<span class="lectura">${t}</span>`;
   return `<span class="lectura">${t}${m}</span>`;
 }
+/* Cada forma de cocinar tiene su vocabulario: ni el pacharán se mete en el horno
+   ni el helado tiene temperatura. */
+const ETIQUETA_MODO = {
+  'CONGELADOR': ['congelador', 'congelación'],
+  'MACERAR':    ['maceración', 'en maceración'],
+  'PRESIÓN':    ['olla rápida', 'en presión'],
+  'BAJA':       ['potencia', 'cocción lenta'],
+  'ALTA':       ['potencia', 'cocción lenta'],
+  'CARBÓN':     ['al carbón', 'sobre el fuego'],
+  'FOGÓN':      ['al fuego', 'tiempo'],
+  'NEVERA':     ['en frío', 'en la nevera'],
+  'VASO':       ['se monta en vaso', ''],
+  'COCTELERA':  ['coctelera', ''],
+  'BATIDORA':   ['batidora', ''],
+  'JARRA':      ['en jarra', '']
+};
 function medidasDe(r){
   const c = [];
-  if(gradosNum(r)) c.push(`<div><b>${r.temp}°C</b><small>temperatura</small></div>`);
-  else if(r.temp) c.push(`<div><b style="font-size:17px">${escapar(r.temp)}</b><small>modo</small></div>`);
-  if(r.min) c.push(`<div><b>${textoTiempo(r.min)}</b><small>tiempo</small></div>`);
+  const et = (!gradosNum(r) && r.temp) ? (ETIQUETA_MODO[r.temp] || ['preparación', 'tiempo']) : null;
+  if(gradosNum(r)){
+    c.push(`<div><b>${r.temp}°C</b><small>temperatura</small></div>`);
+  }else if(r.temp){
+    c.push(`<div><b style="font-size:17px">${escapar(r.temp)}</b><small>${et[0]}</small></div>`);
+  }
+  if(r.min) c.push(`<div><b>${textoTiempo(r.min)}</b><small>${et && et[1] ? et[1] : 'tiempo'}</small></div>`);
   if(enFrio(r)) c.push('<div><b>En frío</b><small>no se cocina</small></div>');
   c.push(`<div><b>${r.raciones || 2}</b><small>${r.temp === 'MACERAR' ? 'copas' : 'raciones'}</small></div>`);
   return '<div class="medidas">' + c.join('') + '</div>';
@@ -1981,19 +2005,33 @@ function abrirFerro(){
 }
 
 /* ---------- ajustar grados y tiempos ---------- */
+/* Un helado se mide en horas y un pacharán en días: la ventana se adapta. */
+let ajusteUnidad = {clave: 'min', nombre: 'min', factor: 1};
+function unidadDe(r){
+  if(r.temp === 'MACERAR') return {clave: 'dias', nombre: 'días', factor: 1440};
+  if(r.temp === 'CONGELADOR') return {clave: 'horas', nombre: 'horas', factor: 60};
+  if(['BAJA','ALTA','CARBÓN'].includes(r.temp)) return {clave: 'horas', nombre: 'horas', factor: 60};
+  if(r.min && r.min >= 240) return {clave: 'horas', nombre: 'horas', factor: 60};
+  return {clave: 'min', nombre: 'min', factor: 1};
+}
+const porTandas = () => ajusteUnidad.clave === 'min';
+
 function filaTiempo(i, valor, texto, total){
+  const u = ajusteUnidad.nombre;
+  const titulo = ajusteUnidad.clave === 'dias' ? 'Maceración'
+               : (ajusteUnidad.clave === 'horas' ? 'Tiempo' : (total > 1 ? 'Tiempo ' + (i + 1) : 'Tiempo'));
   return `<div class="filaT" data-fila="${i}">
-    <label for="ajT${i}">${total > 1 ? 'Tiempo ' + (i + 1) : 'Tiempo'} (min)${texto ? ' · ' + escapar(texto.slice(0, 55)) : ''}</label>
+    <label for="ajT${i}">${titulo} (${u})${texto && porTandas() ? ' · ' + escapar(texto.slice(0, 55)) : ''}</label>
     <div class="dos">
-      <input id="ajT${i}" type="text" inputmode="numeric" value="${valor || ''}" placeholder="15">
-      <button class="btn" data-quitarT="${i}" style="flex:0 0 auto">Quitar</button>
+      <input id="ajT${i}" type="text" inputmode="numeric" value="${valor || ''}" placeholder="${porTandas() ? '15' : '24'}">
+      ${porTandas() ? `<button class="btn" data-quitarT="${i}" style="flex:0 0 auto">Quitar</button>` : ''}
     </div>
   </div>`;
 }
 function pintarTiempos(lista){
   $('ajTiempos').innerHTML = lista.map((e, i) => filaTiempo(i, e.min, e.texto, lista.length)).join('')
-    + '<button class="btn" id="ajMas" style="width:100%;margin-top:12px">+ Añadir otra tanda</button>';
-  $('ajMas').addEventListener('click', () => {
+    + (porTandas() ? '<button class="btn" id="ajMas" style="width:100%;margin-top:12px">+ Añadir otra tanda</button>' : '');
+  if(porTandas()) $('ajMas').addEventListener('click', () => {
     const actuales = leerTiempos(true);
     actuales.push({min: '', texto: ''});
     pintarTiempos(actuales);
@@ -2028,27 +2066,44 @@ function abrirAjuste(){
   const base = todas().find(x => x.id === fichaActual);
   if(!base) return;
   const r = conAjustes(base);
-  ajusteEtapas = etapasDe(r);
+  ajusteUnidad = unidadDe(r);
+  ajusteEtapas = porTandas() ? etapasDe(r) : [{min: r.min, texto: ''}];
   $('ajQue').textContent = r.nombre;
-  $('ajTemp').value = r.temp || '';
   $('ajError').textContent = '';
-  pintarTiempos(ajusteEtapas.length ? ajusteEtapas : [{min: '', texto: ''}]);
+
+  const numerico = gradosNum(r);
+  $('ajZonaTemp').hidden = !numerico;
+  $('ajTemp').value = numerico ? r.temp : '';
+  $('ajModo').hidden = numerico || !r.temp;
+  if(r.temp && !numerico){
+    const et = ETIQUETA_MODO[r.temp] || ['preparación'];
+    $('ajModo').innerHTML = 'Esta receta no lleva grados: va <b>' + escapar(r.temp) + '</b> (' + et[0] + ').';
+  }
+  $('ajPistaTandas').hidden = !porTandas();
+
+  const factor = ajusteUnidad.factor;
+  pintarTiempos(ajusteEtapas.length
+    ? ajusteEtapas.map(e => ({min: e.min ? Math.round(e.min / factor) : '', texto: e.texto}))
+    : [{min: '', texto: ''}]);
   abrir('capaAjuste');
 }
 
 $('ajGuardar').addEventListener('click', async () => {
   const base = todas().find(x => x.id === fichaActual);
   if(!base) return;
-  const temp = parseInt($('ajTemp').value, 10) || null;
-  if(temp && (temp < 60 || temp > 240)){
+  const original = conAjustes(base);
+  const numerico = gradosNum(original);
+  const temp = numerico ? (parseInt($('ajTemp').value, 10) || null) : (original.temp || null);
+  if(numerico && temp && (temp < 60 || temp > 240)){
     $('ajError').style.color = 'var(--paprika)';
     $('ajError').textContent = 'La temperatura debe estar entre 60 y 240 °C.';
     return;
   }
-  const tandas = leerTiempos(false);
-  if(!tandas.length && !confirm('No has puesto ningún tiempo. ¿Es una receta que no se cocina?')) return;
+  const factor = ajusteUnidad.factor;
+  const tandas = leerTiempos(false).map(t => ({min: t.min * factor, temp: t.temp, texto: t.texto}));
+  if(!tandas.length && !confirm('No has puesto ningún tiempo. ¿Seguro que esta receta no lo lleva?')) return;
 
-  tandas.forEach(t => { if(!t.temp) t.temp = temp; });
+  tandas.forEach(t => { if(!t.temp) t.temp = numerico ? temp : null; });
   const suma = tandas.reduce((a, e) => a + e.min, 0);
   ajustes[base.id] = {temp, min: suma || null, etapas: tandas.length ? tandas : null};
   await guardarAjustes();
