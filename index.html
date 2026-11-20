@@ -53,7 +53,19 @@ button{cursor:pointer}
   display:grid;place-items:center;flex:0 0 auto;font-size:14px;color:#fff}
 .item[aria-pressed="true"] .tick{background:var(--oliva);border-color:var(--oliva)}
 .item[aria-pressed="true"] .lbl{text-decoration:line-through;color:var(--gris)}
-.grupoCompra{margin:18px 0 2px;font-size:14px;font-weight:700;color:var(--paprika)}
+.grupoCompra{margin:18px 0 2px;font-size:14px;font-weight:700;color:var(--paprika);
+  display:flex;align-items:center;gap:8px}
+.grupoCompra span{flex:1}
+.flechas{display:flex;gap:6px;flex:0 0 auto}
+.flechas button{border:1px solid var(--linea);background:var(--papel);border-radius:8px;
+  width:40px;height:38px;font-size:17px;line-height:1;color:var(--tinta)}
+.flechas button[disabled]{opacity:.3}
+.item.ordenando{border-bottom:1px solid var(--linea);padding:7px 2px}
+.item.ordenando .lbl{text-decoration:none;color:var(--tinta)}
+.barraOrden{display:flex;gap:8px;margin:0 0 6px}
+.barraOrden button{flex:1;border:1px solid var(--linea);background:var(--papel);
+  border-radius:10px;padding:10px;font-weight:600}
+.barraOrden button[aria-pressed="true"]{background:var(--mostaza);border-color:var(--mostaza);color:#3B2C00}
 .volver{background:none;border:0;color:var(--hueso);font-size:34px;line-height:1;
   padding:0 8px 4px 0;margin-left:-6px}
 .volver[hidden]{display:none}
@@ -447,7 +459,7 @@ textarea{min-height:104px;resize:vertical;line-height:1.45}
    1. Catálogo
    Formato: momento|nombre|tipos|raciones|°C|min|ingredientes|pasos|consejo
    ============================================================ */
-const VERSION = '7.4 · 20-11-2026';
+const VERSION = '7.5 · 20-11-2026';
 
 const CRUDO = `
 desayuno|Tostada de tomate y aceite|cereales,verduras|1|180|5|2 rebanadas de pan de hogaza;1 tomate maduro rallado;1 cucharada de aceite de oliva virgen extra;Sal|Tuesta el pan 5 minutos a 180°C dándole la vuelta a mitad;Escurre el tomate rallado y extiéndelo sobre el pan;Riega con el aceite y sala al gusto|Escurre bien el tomate o el pan se reblandece en dos minutos.
@@ -1554,8 +1566,29 @@ $('fotoCamara').addEventListener('change', recibirFotoRapida);
 
 /* ---------- plan de 21 días y lista de la compra ---------- */
 const CLAVE_COMPRA = 'recetario:compra';
+const CLAVE_ORDEN = 'recetario:ordencompra';
 let compraMarcas = {};
+let ordenCompra = {grupos: {}, items: {}};
 let semanaCompra = 1, sitioCompra = 'o';
+let modoOrden = false;
+
+/* Devuelve el orden guardado, completado con lo que falte. */
+function ordenDe(guardado, total){
+  const o = (guardado || []).filter(i => i >= 0 && i < total);
+  for(let i = 0; i < total; i++) if(!o.includes(i)) o.push(i);
+  return o;
+}
+function mueve(lista, desde, hacia){
+  if(hacia < 0 || hacia >= lista.length) return lista;
+  const x = lista.splice(desde, 1)[0];
+  lista.splice(hacia, 0, x);
+  return lista;
+}
+const flechas = (tipo, idx, primero, ultimo) =>
+  `<span class="flechas">
+     <button data-${tipo}sube="${idx}" ${primero ? 'disabled' : ''} aria-label="Subir">↑</button>
+     <button data-${tipo}baja="${idx}" ${ultimo ? 'disabled' : ''} aria-label="Bajar">↓</button>
+   </span>`;
 
 function pintarExtras(){
   const e = $('extras');
@@ -1598,36 +1631,79 @@ function abrirPlan(){
 
 function pintarCompra(){
   const lista = PLAN_COMPRA[String(semanaCompra)] || [];
-  let h = '<p class="pista" style="margin-top:0">Dos listas separadas, una para Otero y otra para Gijón, cada una con sus marcas. Ajusta las cantidades a tu casa.</p>'
+  const og = ordenDe(ordenCompra.grupos[semanaCompra], lista.length);
+  let h = '<p class="pista" style="margin-top:0">Dos listas separadas, una para Otero y otra para Gijón, cada una con sus marcas.</p>'
     + '<div class="seg">' + ['o','g'].map(x =>
         `<button data-sitio="${x}" aria-pressed="${x === sitioCompra}">${PLAN_SITIOS[x]}</button>`).join('') + '</div>'
     + '<div class="seg">' + [1,2,3].map(x =>
-        `<button data-semana="${x}" aria-pressed="${x === semanaCompra}">Semana ${x}</button>`).join('') + '</div>';
-  lista.forEach((g, gi) => {
-    h += `<p class="grupoCompra">${escapar(g.t)}</p>`;
-    g.i.forEach((art, ii) => {
+        `<button data-semana="${x}" aria-pressed="${x === semanaCompra}">Semana ${x}</button>`).join('') + '</div>'
+    + '<div class="barraOrden"><button id="modoOrdenCompra" aria-pressed="' + modoOrden + '">'
+    + (modoOrden ? '✓ Listo, ya está ordenada' : '↕ Ordenar como tu súper') + '</button></div>';
+  if(modoOrden) h += '<p class="pista">Mueve los grupos y los artículos con las flechas hasta dejarlos en el orden de los pasillos. Se guarda para las tres semanas.</p>';
+
+  og.forEach((gi, pos) => {
+    const g = lista[gi];
+    const oi = ordenDe(ordenCompra.items[semanaCompra + ':' + gi], g.i.length);
+    h += `<p class="grupoCompra"><span>${escapar(g.t)}</span>`
+       + (modoOrden ? flechas('g', gi, pos === 0, pos === og.length - 1) : '') + '</p>';
+    oi.forEach((ii, pos2) => {
       const clave = sitioCompra + ':' + semanaCompra + ':' + gi + ':' + ii;
       const on = !!compraMarcas[clave];
-      h += `<button class="item" data-art="${clave}" aria-pressed="${on}">
-        <span class="tick">${on ? '✓' : ''}</span><span class="lbl">${escapar(art)}</span></button>`;
+      if(modoOrden){
+        h += `<div class="item ordenando"><span class="lbl" style="flex:1">${escapar(g.i[ii])}</span>`
+           + flechas('i', gi + '-' + ii, pos2 === 0, pos2 === oi.length - 1) + '</div>';
+      }else{
+        h += `<button class="item" data-art="${clave}" aria-pressed="${on}">
+          <span class="tick">${on ? '✓' : ''}</span><span class="lbl">${escapar(g.i[ii])}</span></button>`;
+      }
     });
   });
-  h += '<div class="acciones"><button class="btn" id="limpiaCompra">Desmarcar la semana '
-     + semanaCompra + ' en ' + PLAN_SITIOS[sitioCompra] + '</button></div>';
+  if(!modoOrden){
+    h += '<div class="acciones"><button class="btn" id="limpiaCompra">Desmarcar la semana '
+       + semanaCompra + ' en ' + PLAN_SITIOS[sitioCompra] + '</button></div>';
+  }
   $('cuerpoCompra').innerHTML = h;
-  $('limpiaCompra').addEventListener('click', async () => {
-    const pre = sitioCompra + ':' + semanaCompra + ':';
-    Object.keys(compraMarcas).forEach(k => { if(k.startsWith(pre)) delete compraMarcas[k]; });
-    await escribirClave(CLAVE_COMPRA, compraMarcas);
-    pintarCompra();
-  });
+  $('modoOrdenCompra').addEventListener('click', () => { modoOrden = !modoOrden; pintarCompra(); });
+  if(!modoOrden){
+    $('limpiaCompra').addEventListener('click', async () => {
+      const pre = sitioCompra + ':' + semanaCompra + ':';
+      Object.keys(compraMarcas).forEach(k => { if(k.startsWith(pre)) delete compraMarcas[k]; });
+      await escribirClave(CLAVE_COMPRA, compraMarcas);
+      pintarCompra();
+    });
+  }
 }
 $('cuerpoCompra').addEventListener('click', async e => {
   const si = e.target.closest('[data-sitio]');
   const se = e.target.closest('[data-semana]');
   const ar = e.target.closest('[data-art]');
+  const gs = e.target.closest('[data-gsube]'), gb = e.target.closest('[data-gbaja]');
+  const is = e.target.closest('[data-isube]'), ib = e.target.closest('[data-ibaja]');
   if(si){ sitioCompra = si.dataset.sitio; pintarCompra(); return; }
   if(se){ semanaCompra = +se.dataset.semana; pintarCompra(); return; }
+
+  if(gs || gb){
+    const lista = PLAN_COMPRA[String(semanaCompra)];
+    const gi = +(gs || gb).dataset[gs ? 'gsube' : 'gbaja'];
+    // el mismo orden de grupos para las tres semanas
+    [1,2,3].forEach(w => {
+      const o = ordenDe(ordenCompra.grupos[w], (PLAN_COMPRA[String(w)] || []).length);
+      const pos = o.indexOf(gi);
+      if(pos >= 0) ordenCompra.grupos[w] = mueve(o, pos, pos + (gs ? -1 : 1));
+    });
+    await escribirClave(CLAVE_ORDEN, ordenCompra);
+    pintarCompra(); return;
+  }
+  if(is || ib){
+    const [gi, ii] = (is || ib).dataset[is ? 'isube' : 'ibaja'].split('-').map(Number);
+    const g = PLAN_COMPRA[String(semanaCompra)][gi];
+    const clave = semanaCompra + ':' + gi;
+    const o = ordenDe(ordenCompra.items[clave], g.i.length);
+    const pos = o.indexOf(ii);
+    ordenCompra.items[clave] = mueve(o, pos, pos + (is ? -1 : 1));
+    await escribirClave(CLAVE_ORDEN, ordenCompra);
+    pintarCompra(); return;
+  }
   if(ar){
     const k = ar.dataset.art;
     if(compraMarcas[k]) delete compraMarcas[k]; else compraMarcas[k] = true;
@@ -1635,7 +1711,7 @@ $('cuerpoCompra').addEventListener('click', async e => {
     pintarCompra();
   }
 });
-function abrirCompra(){ pintarCompra(); abrir('capaCompra'); }
+function abrirCompra(){ modoOrden = false; pintarCompra(); abrir('capaCompra'); }
 
 /* ---------- compra para la olla ferroviaria ---------- */
 const CLAVE_FERRO = 'recetario:ferro';
@@ -1660,16 +1736,9 @@ function filaCompra(texto, clave){
   return `<button class="item" data-ferro="${escapar(clave)}" aria-pressed="${on}">
     <span class="tick">${on ? '✓' : ''}</span><span class="lbl">${escapar(texto)}</span></button>`;
 }
-function pintarFerro(){
+/* Calcula la lista entera: textos y orden actual. */
+function listaFerro(){
   const rs = recetasFerro();
-  let h = '<p class="pista" style="margin-top:0">Marca las recetas que vas a hacer y abajo se junta la compra. El carbón y lo de encender la olla va siempre.</p>'
-    + '<div class="opciones" id="ferroRecetas">'
-    + rs.map(r => `<label><input type="checkbox" value="${r.id}"${ferro.recetas.includes(r.id) ? ' checked' : ''}>${escapar(r.nombre)}</label>`).join('')
-    + '</div>';
-
-  h += '<p class="grupoCompra">Para la olla</p>'
-    + FERRO_FIJOS.map((t, i) => filaCompra(t, 'fijo' + i)).join('');
-
   const ing = [];
   rs.filter(r => ferro.recetas.includes(r.id)).forEach(r => {
     r.ing.forEach(x => {
@@ -1677,21 +1746,59 @@ function pintarFerro(){
       if(limpio && !ing.some(y => y.toLowerCase() === limpio.toLowerCase())) ing.push(limpio);
     });
   });
-  if(ing.length){
-    h += `<p class="grupoCompra">Ingredientes (${ing.length})</p>`
-      + ing.map(t => filaCompra(t, 'i:' + t.toLowerCase())).join('');
-  }else{
-    h += '<p class="pista">Marca arriba las recetas que vayas a cocinar y aquí aparecerán sus ingredientes, sin repetir.</p>';
-  }
-  h += '<div class="acciones"><button class="btn" id="limpiaFerro">Desmarcar todo</button></div>';
-  $('cuerpoFerro').innerHTML = h;
-  $('limpiaFerro').addEventListener('click', async () => {
-    ferro.marcas = {};
-    await escribirClave(CLAVE_FERRO, ferro);
-    pintarFerro();
+  const texto = {};
+  FERRO_FIJOS.forEach((t, i) => texto['fijo' + i] = t);
+  ing.forEach(t => texto['i:' + t.toLowerCase()] = t);
+  const claves = Object.keys(texto);
+  const orden = (ferro.orden || []).filter(k => claves.includes(k));
+  claves.forEach(k => { if(!orden.includes(k)) orden.push(k); });
+  return {texto, orden, cuantosIng: ing.length};
+}
+function pintarFerro(){
+  const rs = recetasFerro();
+  const {texto, orden, cuantosIng} = listaFerro();
+  let h = '<p class="pista" style="margin-top:0">Marca las recetas que vas a hacer y abajo se junta la compra. El carbón y lo de encender la olla va siempre.</p>'
+    + '<div class="opciones" id="ferroRecetas">'
+    + rs.map(r => `<label><input type="checkbox" value="${r.id}"${ferro.recetas.includes(r.id) ? ' checked' : ''}>${escapar(r.nombre)}</label>`).join('')
+    + '</div>'
+    + '<div class="barraOrden"><button id="modoOrdenFerro" aria-pressed="' + modoOrden + '">'
+    + (modoOrden ? '✓ Listo, ya está ordenada' : '↕ Ordenar como tu súper') + '</button></div>';
+  if(modoOrden) h += '<p class="pista">Sube y baja los artículos hasta dejarlos en el orden de los pasillos de tu súper.</p>';
+
+  h += '<p class="grupoCompra"><span>La compra</span></p>';
+  orden.forEach((k, pos) => {
+    if(modoOrden){
+      h += `<div class="item ordenando"><span class="lbl" style="flex:1">${escapar(texto[k])}</span>`
+         + flechas('f', k, pos === 0, pos === orden.length - 1) + '</div>';
+    }else{
+      const on = !!ferro.marcas[k];
+      h += `<button class="item" data-ferro="${escapar(k)}" aria-pressed="${on}">
+        <span class="tick">${on ? '✓' : ''}</span><span class="lbl">${escapar(texto[k])}</span></button>`;
+    }
   });
+  if(!cuantosIng) h += '<p class="pista">Marca arriba las recetas que vayas a cocinar y aquí aparecerán sus ingredientes, sin repetir.</p>';
+  if(!modoOrden) h += '<div class="acciones"><button class="btn" id="limpiaFerro">Desmarcar todo</button></div>';
+
+  $('cuerpoFerro').innerHTML = h;
+  $('modoOrdenFerro').addEventListener('click', () => { modoOrden = !modoOrden; pintarFerro(); });
+  if(!modoOrden){
+    $('limpiaFerro').addEventListener('click', async () => {
+      ferro.marcas = {};
+      await escribirClave(CLAVE_FERRO, ferro);
+      pintarFerro();
+    });
+  }
 }
 $('cuerpoFerro').addEventListener('click', async e => {
+  const fs2 = e.target.closest('[data-fsube]'), fb = e.target.closest('[data-fbaja]');
+  if(fs2 || fb){
+    const k = (fs2 || fb).dataset[fs2 ? 'fsube' : 'fbaja'];
+    const o = listaFerro().orden;
+    const pos = o.indexOf(k);
+    if(pos >= 0) ferro.orden = mueve(o, pos, pos + (fs2 ? -1 : 1));
+    await escribirClave(CLAVE_FERRO, ferro);
+    pintarFerro(); return;
+  }
   const b = e.target.closest('[data-ferro]');
   if(!b) return;
   const k = b.dataset.ferro;
@@ -1707,7 +1814,11 @@ $('cuerpoFerro').addEventListener('change', async e => {
   await escribirClave(CLAVE_FERRO, ferro);
   pintarFerro();
 });
-function abrirFerro(){ pintarFerro(); abrir('capaFerro'); }
+function abrirFerro(){
+  modoOrden = false;
+  if(!ferro.orden) ferro.orden = [];
+  pintarFerro(); abrir('capaFerro');
+}
 
 /* ---------- ajustar grados y tiempos ---------- */
 function filaTiempo(i, valor, texto, total){
@@ -2326,6 +2437,12 @@ $('btnActualizar').addEventListener('click', async () => {
   if(fe && typeof fe === 'object'){
     ferro.recetas = Array.isArray(fe.recetas) ? fe.recetas : [];
     ferro.marcas = (fe.marcas && typeof fe.marcas === 'object') ? fe.marcas : {};
+    ferro.orden = Array.isArray(fe.orden) ? fe.orden : [];
+  }
+  const oc = await leerClave(CLAVE_ORDEN);
+  if(oc && typeof oc === 'object'){
+    ordenCompra.grupos = oc.grupos || {};
+    ordenCompra.items = oc.items || {};
   }
   const cm = await leerClave(CLAVE_COMPRA);
   if(cm && typeof cm === 'object') compraMarcas = cm;
